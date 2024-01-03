@@ -26,6 +26,10 @@ body{
     padding: 5px;
 }
 
+#healthAmount{
+    width: 20%;
+    text-align: center;
+}
 #monsterStats{
     display: none;
     border: 1px solid #0a0a23;
@@ -44,7 +48,7 @@ body{
     padding: 5px;
 }
 
-button{
+button,#healthAmount{
     cursor: pointer;
     color: #0a0a23;
     background-color: #feac32;

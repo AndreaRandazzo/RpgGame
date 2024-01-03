@@ -8,7 +8,12 @@ let inventory = ["stick"];
 const button1 = document.querySelector("#button1");
 const button2 = document.querySelector("#button2");
 const button3 = document.querySelector("#button3");
-
+const plusBtn = document.querySelector("#plusBtn");
+const minusBtn = document.querySelector("#minusBtn");
+const healthAmountInput = document.querySelector("#healthAmount");
+healthAmountInput.value = "0";
+const healthButtons = document.querySelector("#healthButtons");
+healthButtons.style.display = "none";
 const text = document.querySelector("#text");
 const xpText = document.querySelector("#xpText");
 const healthText = document.querySelector("#healthText");
@@ -78,6 +83,10 @@ const locations = [
         "button text": ["2", "8", "Go to town square?"],
         "button functions": [pickTwo, pickEight, goTown],
         text: "You find a secret game. Pick a number above. Ten numbers will be randomly chosen between 0 and 10. If the number you choose matches one of the random numbers, you win!"
+    },
+    {
+        name:"return to town square",
+        "button text": ["Go to town square","Go to town square","Go to town square"],
     }
 ];
 
@@ -85,7 +94,23 @@ button1.onclick = goStore;
 button2.onclick = goCave;
 button3.onclick = fightDragon;
 
+plusBtn.onclick = function() {
+    let currentAmount = parseInt(healthAmountInput.value);
+    healthAmountInput.value = currentAmount + 10;
+}
+minusBtn.onclick = function() {
+    let currentAmount = parseInt(healthAmountInput.value);
+    if (currentAmount >= 20) {
+        healthAmountInput.value = currentAmount - 10;
+    }
+}
+
 function update(location) {
+    if (location.name === "store") {
+        healthButtons.style.display = "inline-block";
+    } else {
+        healthButtons.style.display = "none";
+    }
     monsterStats.style.display = "none";
     button1.innerText = location["button text"][0];
     button2.innerText = location["button text"][1];
@@ -102,6 +127,8 @@ function goTown() {
 
 function goStore() {
     update(locations[1]);
+    let maxHealthCanBuy = Math.floor(gold/10) * 10;
+    healthAmountInput.max = maxHealthCanBuy;
 }
 
 function goCave() {
@@ -119,15 +146,43 @@ function goFight() {
 }
 
 function buyHealth() {
-    if (gold >= 10) {
-        gold -= 10;
-        health += 10;
-        goldText.innerText = gold;
-        healthText.innerText = health;
+    let healthQuantity = parseInt(healthAmountInput.value);
+
+    if (healthQuantity === 0) {
+        if (gold >= 10) {
+            gold -= 10;
+            health += 10;
+            goldText.innerText = gold;
+            healthText.innerText = health;
+            healthAmountInput.value = "0";
+        } else {
+            text.innerText = "You do not have enough gold to buy health.";
+        }
     } else {
-        text.innerText = "You do not have enough gold to buy health.";
+        let maxHealth = Math.floor(gold / 10) * 10;
+        let cost;
+
+        if (healthQuantity > maxHealth) {
+            healthQuantity = maxHealth;
+        } else {
+            healthQuantity = Math.floor(healthQuantity / 10) * 10;
+        }
+
+        cost = healthQuantity;
+
+        if (gold >= cost && gold >= 10) {
+            gold -= cost;
+            health += healthQuantity;
+            goldText.innerText = gold;
+            healthText.innerText = health;
+            healthAmountInput.value = "0";
+        } else {
+            text.innerText = "You do not have enough gold to buy health.";
+        }
     }
 }
+
+
 
 function buyWeapon() {
     if (currentWeapon < weapons.length - 1) {
@@ -187,7 +242,7 @@ function attack() {
         text.innerText += " You miss.";
     }
     monsterHealthText.innerText = monsterHealth;
-    if (health <= 0) {
+    if (health < 0) {
         healthText.innerText = 0;
         lose();
     } else if (monsterHealth <= 0) {
@@ -203,10 +258,7 @@ function attack() {
 
 function getMonsterAttackValue(level) {
     const hit = (level * 5) - (Math.floor(Math.random() * xp));
-    if (hit > 0) {
-        console.log("The " + monsters[fighting].name + " attack and does " + hit + " damage to you!");
-    }
-    return (hit > 0) ? hit : 0 ;
+    return (hit > 0) ? hit : level ;
 }
 
 function isMonsterHit() {
@@ -227,7 +279,7 @@ function winGame() {
 
 function defeatMonster() {
     gold += Math.floor(monsters[fighting].level * 6.7);
-    xp += monsters[fighting].level;  
+    xp += Math.floor(monsters[fighting].level * ((Math.random() + 1)));
     goldText.innerText = gold;
     xpText.innerText = xp;
     update(locations[4]);
@@ -238,6 +290,7 @@ function restart() {
     health = 100;
     gold = 50;
     currentWeapon = 0;
+    healthAmountInput.value = "0";
     inventory = ["stick"];
     goldText.innerText = gold;
     healthText.innerText = health;
